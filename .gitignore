@@ -1,0 +1,19 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+#virtual environment
+venv/
+.env/
+
+#Sqlite
+*.db
+*.sqlite3
+
+#Redis
+dump.rbd
+
+#Vue / Node
+node_modules/
+dist/
