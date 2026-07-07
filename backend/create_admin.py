@@ -1,6 +1,7 @@
 from app import app
 from extensions import db
 from models.user import User
+from werkzeug.security import generate_password_hash
 
 def create_admin():
     with app.app_context():
@@ -9,7 +10,7 @@ def create_admin():
             admin = User(
                 name = "Administrator",
                 email = "admin123@tma.com",
-                password = "admin123",
+                password = generate_password_hash("admin123"),
                 role = "Admin",
                 phone = "7758589624",
                 status = "Active"
