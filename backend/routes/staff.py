@@ -189,6 +189,9 @@ def complete_trek(trek_id):
         return jsonify({"message": "You are not assigned to this trek"}), 403
     
     trek.status = "Completed"
+    bookings = Booking.query.filter_by(trek_id = trek.id).all()
+    for booking in bookings:
+        booking.booking_status = "Completed"
 
     db.session.commit()
 
