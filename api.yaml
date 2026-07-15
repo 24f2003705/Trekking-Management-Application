@@ -1,0 +1,574 @@
+openapi: 3.0.0
+
+info:
+  title: Trekking Management API
+  description: REST APIs for the Trekking Management Application
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new trekker
+      responses:
+        '201':
+          description: Registration successful
+        '400':
+          description: Invalid request
+        '409':
+          description: Email already exists
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+        '403':
+          description: User account inactive
+# ---------------- Staff ----------------
+  /api/staff/dashboard:
+    get:
+      tags:
+        - Trek Staff
+      summary: View staff dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard loaded
+
+  /api/staff/treks:
+    get:
+      tags:
+        - Trek Staff
+      summary: View assigned treks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Assigned treks retrieved
+
+  /api/staff/treks/{trek_id}:
+    get:
+      tags:
+        - Trek Staff
+      summary: View details of an assigned trek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek details returned
+        '404':
+          description: Trek not found
+
+  /api/staff/treks/{trek_id}/status:
+    put:
+      tags:
+        - Trek Staff
+      summary: Update trek status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek status updated
+
+  /api/staff/treks/{trek_id}/slots:
+    put:
+      tags:
+        - Trek Staff
+      summary: Update available slots
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Slots updated successfully
+
+  /api/staff/treks/{trek_id}/participants:
+    get:
+      tags:
+        - Trek Staff
+      summary: View trek participants
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Participants retrieved
+
+  /api/staff/treks/{trek_id}/complete:
+    put:
+      tags:
+        - Trek Staff
+      summary: Mark trek as completed
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek marked as completed
+
+   # ---------------- Admin ----------------
+  # ---------------- Admin ----------------
+
+  /api/admin/dashboard:
+    get:
+      tags:
+        - Admin
+      summary: View admin dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard loaded successfully
+
+  /api/admin/treks:
+    get:
+      tags:
+        - Admin
+      summary: View all treks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of treks.
+
+    post:
+      tags:
+        - Admin
+      summary: Create a new trek
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Trek created successfully
+
+  /api/admin/treks/{trek_id}:
+    get:
+      tags:
+        - Admin
+      summary: View trek details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek details retrieved
+
+    put:
+      tags:
+        - Admin
+      summary: Update trek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek updated successfully
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete trek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek deleted successfully
+
+  /api/admin/treks/{trek_id}/assign_staff:
+    put:
+      tags:
+        - Admin
+      summary: Assign staff to trek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff assigned successfully
+
+  /api/admin/staff:
+    get:
+      tags:
+        - Admin
+      summary: View all staff
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Staff list retrieved
+
+    post:
+      tags:
+        - Admin
+      summary: Create trek staff
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Staff created successfully
+
+  /api/admin/staff/{id}:
+    get:
+      tags:
+        - Admin
+      summary: View staff details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff details retrieved
+
+    put:
+      tags:
+        - Admin
+      summary: Update staff
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff updated successfully
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete staff
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff deleted successfully
+
+  /api/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: View all users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User list retrieved
+
+  /api/admin/users/{id}/status:
+    put:
+      tags:
+        - Admin
+      summary: Update user status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User status updated successfully
+
+  /api/admin/search:
+    get:
+      tags:
+        - Admin
+      summary: Search users and treks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Search completed
+
+  /api/admin/bookings:
+    get:
+      tags:
+        - Admin
+      summary: View all bookings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Booking list retrieved
+
+  /api/admin/reports/dashboard:
+    get:
+      tags:
+        - Reports
+      summary: View dashboard statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics retrieved
+
+  /api/admin/reports/bookings:
+    get:
+      tags:
+        - Reports
+      summary: View booking statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Booking report generated
+
+  /api/admin/reports/monthly:
+    get:
+      tags:
+        - Reports
+      summary: View monthly HTML report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Monthly report displayed
+
+  # ---------------- Trekker ----------------
+
+  /api/user/dashboard:
+    get:
+      tags:
+        - Trekker
+      summary: View user dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard loaded successfully
+
+  /api/user/treks:
+    get:
+      tags:
+        - Trekker
+      summary: View all available treks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Available treks retrieved
+
+  /api/user/treks/{trek_id}:
+    get:
+      tags:
+        - Trekker
+      summary: View trek details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: trek_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek details retrieved
+
+  /api/user/search:
+    get:
+      tags:
+        - Trekker
+      summary: Search treks by name
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Search results returned
+
+  /api/user/filter:
+    get:
+      tags:
+        - Trekker
+      summary: Filter treks by difficulty, location or duration
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Filtered trek list returned
+
+  /api/user/book:
+    post:
+      tags:
+        - Trekker
+      summary: Book a trek
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Trek booked successfully
+
+  /api/user/bookings:
+    get:
+      tags:
+        - Trekker
+      summary: View my bookings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Booking history retrieved
+
+  /api/user/profile:
+    get:
+      tags:
+        - Trekker
+      summary: View user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+
+    put:
+      tags:
+        - Trekker
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile updated successfully
+
+  /api/user/cancel_booking/{booking_id}:
+    put:
+      tags:
+        - Trekker
+      summary: Cancel a booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: booking_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Booking cancelled successfully
+
+  /api/user/history:
+    get:
+      tags:
+        - Trekker
+      summary: View trekking history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trek history retrieved
+
+  /api/user/export-history:
+    post:
+      tags:
+        - Trekker
+      summary: Export trekking history as CSV
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: CSV export started
+
+  /api/user/latest-export:
+    get:
+      tags:
+        - Trekker
+      summary: Check export status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Export status returned
+
+  /api/user/download-export:
+    get:
+      tags:
+        - Trekker
+      summary: Download exported CSV
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: CSV downloaded successfully
+  
