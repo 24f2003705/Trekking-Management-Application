@@ -11,3 +11,4 @@ class User(db.Model):
     phone = db.Column(db.String(20), nullable=True)
     status = db.Column(db.String(20), default="Active", nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    latest_export = db.Column(db.String(200), nullable=True)

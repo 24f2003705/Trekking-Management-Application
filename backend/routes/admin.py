@@ -2,13 +2,15 @@ from flask import Blueprint, jsonify, request
 from utils.decorators import admin_required
 from models import User, Trek, Booking, StaffProfile
 from datetime import datetime
-from extensions import db
+from extensions import db, cache
 from werkzeug.security import generate_password_hash
+from flask import send_file
+import os
 
 admin_bp = Blueprint("admin", __name__)
-
 @admin_bp.route("/dashboard")
 @admin_required
+@cache.cached(timeout=60)
 def dashboard():
     total_users = User.query.filter_by(role="Trekker").count()
     total_staff = User.query.filter_by(role="Trek Staff").count()
@@ -32,6 +34,7 @@ def create_trek():
     difficulty = data.get("difficulty")
     duration = data.get("duration")
     total_slots = data.get("total_slots")
+    assigned_staff_id = data.get("assigned_staff_id")
     start_date = data.get("start_date")
     end_date = data.get("end_date")
 
@@ -50,6 +53,7 @@ def create_trek():
         duration=duration,
         total_slots=total_slots,
         available_slots=total_slots,
+        assigned_staff_id=assigned_staff_id,
         start_date=datetime.strptime(start_date, "%Y-%m-%d"),
         end_date=datetime.strptime(end_date, "%Y-%m-%d"),
         status="Pending"
@@ -57,6 +61,7 @@ def create_trek():
 
     db.session.add(trek)
     db.session.commit()
+    cache.clear()
     return jsonify({"message": "Trek created successfully", "trek_id": trek.id}), 201
 
 @admin_bp.route("/treks", methods=["GET"])
@@ -75,6 +80,8 @@ def get_all_treks():
             "total_slots": trek.total_slots,
             "available_slots": trek.available_slots,
             "status": trek.status,
+            "assigned_staff_id": trek.assigned_staff_id,
+            "assigned_staff": trek.assigned_staff.name if trek.assigned_staff else "Not Assigned",
             "start_date": trek.start_date.strftime("%Y-%m-%d"),
             "end_date": trek.end_date.strftime("%Y-%m-%d") 
         })
@@ -127,6 +134,7 @@ def update_trek(trek_id):
         trek.end_date = datetime.strptime(data.get("end_date"), "%Y-%m-%d")
     
     db.session.commit()
+    cache.clear()
     return jsonify({"message": "Trek updated successfully"}), 200
 
 
@@ -139,6 +147,7 @@ def delete_trek(trek_id):
     
     db.session.delete(trek)
     db.session.commit()
+    cache.clear()
     return jsonify({"message": "Trek deleted successfully"}), 200
 
 
@@ -170,6 +179,7 @@ def create_staff():
 
     db.session.add(profile)
     db.session.commit()
+    cache.clear()
 
     return jsonify({ "message": "Staff created successfully"}), 201
 
@@ -216,8 +226,24 @@ def update_staff(id):
     staff.name = data.get("name", staff.name)
     staff.phone = data.get("phone", staff.phone)
     staff.status = data.get("status", staff.status)
+    profile = StaffProfile.query.filter_by(user_id=id).first()
+    if profile:
+
+        profile.contact_details = data.get(
+            "contact_details",
+            profile.contact_details
+        )
+        profile.experience = data.get(
+            "experience",
+            profile.experience
+        )
+        profile.status = data.get(
+            "profile_status",
+            profile.status
+        )
 
     db.session.commit()
+    cache.clear()
 
     return jsonify({"message": "Staff updated successfully"}), 200
 
@@ -234,6 +260,7 @@ def delete_staff(id):
     
     db.session.delete(staff)
     db.session.commit()
+    cache.clear()
 
     return jsonify({"message": "Staff deleted successfully"}), 200
 
@@ -253,6 +280,7 @@ def assign_staff(trek_id):
     
     trek.assigned_staff_id = staff.id
     db.session.commit()
+    cache.clear()
     return jsonify({"message": "Staff assigned to trek successfully"}), 200
 
 
@@ -283,6 +311,7 @@ def update_user_status(id):
     data = request.get_json()
     user.status = data.get("status")
     db.session.commit()
+    cache.clear()
     return jsonify({"message": "User status updated successfully"}), 200
 
 
@@ -314,3 +343,55 @@ def get_bookings():
             "payment_status": booking.payment_status,
         })
     return jsonify({"bookings": result}), 200
+
+#Dashboard Statistics
+@admin_bp.route("/reports/dashboard", methods=["GET"])
+@admin_required
+@cache.cached(timeout=60)
+def dashboard_report():
+
+    total_treks = Trek.query.count()
+    total_staff = User.query.filter_by(role="Trek Staff").count()
+    total_users = User.query.filter_by(role="Trekker").count()
+    total_bookings = Booking.query.count()
+
+    completed_treks = Trek.query.filter_by(status="Completed").count()
+    open_treks = Trek.query.filter_by(status="Open").count()
+
+    return jsonify({
+        "total_treks": total_treks,
+        "total_staff": total_staff,
+        "total_users": total_users,
+        "total_bookings": total_bookings,
+        "completed_treks": completed_treks,
+        "open_treks": open_treks
+    }), 200
+
+#booking reports
+@admin_bp.route("/reports/bookings", methods=["GET"])
+@admin_required
+def booking_report():
+
+    booked = Booking.query.filter_by(booking_status="Booked").count()
+    completed = Booking.query.filter_by(booking_status="Completed").count()
+    cancelled = Booking.query.filter_by(booking_status="Cancelled").count()
+
+    return jsonify({
+        "booked": booked,
+        "completed": completed,
+        "cancelled": cancelled
+    }), 200
+
+
+#monthly report
+
+@admin_bp.route("/reports/monthly", methods=["GET"])
+@admin_required
+def view_monthly_report():
+
+    path = os.path.join("reports", "monthly_report.html")
+
+    if not os.path.exists(path):
+        return jsonify({"message": "Report not generated yet"}), 404
+
+    return send_file(path, mimetype="text/html")

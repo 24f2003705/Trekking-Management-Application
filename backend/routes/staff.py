@@ -2,13 +2,14 @@ from flask import Blueprint, jsonify, request
 from utils.decorators import staff_required
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import User, Trek, Booking
-from extensions import db
+from extensions import db, cache
 
 staff_bp = Blueprint("staff", __name__)
 
 def get_logged_in_staff():
     user_id = get_jwt_identity()
     return User.query.get(int(user_id))
+
 
 @staff_bp.route("/dashboard", methods=["GET"])
 @staff_required

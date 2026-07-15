@@ -1,4 +1,4 @@
-__pycache__
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -10,10 +10,19 @@ venv/
 #Sqlite
 *.db
 *.sqlite3
+backend/instance/*.db
 
 #Redis
-dump.rbd
+dump.rdb
 
 #Vue / Node
 node_modules/
 dist/
+
+# Celery
+backend/celerybeat-schedule
+
+# Generated files
+backend/exports/
+backend/reports/
+

@@ -2,8 +2,11 @@ from flask import Blueprint, jsonify, request
 from utils.decorators import trekker_required
 from flask_jwt_extended import get_jwt_identity
 from models import User, Trek, Booking
-from extensions import db
+from extensions import db, cache
 from datetime import date
+from flask import send_from_directory, current_app
+import os
+
 
 
 user_bp = Blueprint("user", __name__)
@@ -21,7 +24,7 @@ def dashboard():
     active_bookings = sum(
         1 for booking in bookings
         if booking.booking_status == "Booked"
-        and booking.trek_status != "Completed"
+        and booking.trek.status != "Completed"
     )
 
     completed_treks = sum(
@@ -47,10 +50,17 @@ def dashboard():
 @user_bp.route("/treks", methods=["GET"])
 @trekker_required
 def get_open_treks():
+    user = get_logged_in_user()
+    booked_trek_ids = [
+        booking.trek_id
+        for booking in Booking.query.filter_by(user_id=user.id).all()
+    ]
     treks = Trek.query.filter_by(status ="Open").all()
     result = []
 
     for trek in treks:
+        if trek.id in booked_trek_ids:
+            continue
         result.append({
             "id": trek.id,
             "trek_name": trek.trek_name,
@@ -59,8 +69,8 @@ def get_open_treks():
             "difficulty": trek.difficulty,
             "duration": trek.duration,
             "available_slots": trek.available_slots,
-            "start_date": trek.start_date,
-            "end_date": trek.end_date
+            "start_date": trek.start_date.strftime("%Y-%m-%d"),
+            "end_date": trek.end_date.strftime("%Y-%m-%d")
         })
 
     return jsonify(result), 200
@@ -83,8 +93,8 @@ def get_single_trek(trek_id):
         "total_slots": trek.total_slots,
         "available_slots": trek.available_slots,
         "status": trek.status,
-        "start_date": trek.start_date,
-        "end_date": trek.end_date
+        "start_date": trek.start_date.strftime("%Y-%m-%d"),
+        "end_date": trek.end_date.strftime("%Y-%m-%d")
     }), 200
 
 
@@ -113,6 +123,11 @@ def search_trek():
 @trekker_required
 def filter_trek():
     query = Trek.query.filter_by(status="Open")
+    user = get_logged_in_user()
+    booked_trek_ids = [
+        booking.trek_id
+        for booking in Booking.query.filter_by(user_id=user.id).all()
+    ]
     difficulty = request.args.get("difficulty")
     location = request.args.get("location")
     duration = request.args.get("duration")
@@ -124,7 +139,7 @@ def filter_trek():
     if duration:
         query = query.filter(Trek.duration == int(duration))
 
-    treks = query.all()
+    treks = query.filter(~Trek.id.in_(booked_trek_ids)).all()
 
     result=[]
     for trek in treks:
@@ -133,7 +148,10 @@ def filter_trek():
             "trek_name": trek.trek_name,
             "location": trek.location,
             "difficulty": trek.difficulty,
-            "duration": trek.duration
+            "duration": trek.duration,
+            "available_slots": trek.available_slots,
+            "start_date": trek.start_date.strftime("%Y-%m-%d"),
+            "end_date": trek.end_date.strftime("%Y-%m-%d")
         })
 
     return jsonify(result), 200
@@ -169,6 +187,7 @@ def book_trek():
         user_id = user.id,
         trek_id = trek.id,
         booking_date = date.today(),
+        booking_status = "Booked",
         payment_status = "Pending"
     )
     
@@ -194,12 +213,12 @@ def my_bookings():
             "booking_id": booking.id,
             "trek_name": booking.trek.trek_name,
             "location": booking.trek.location,
-            "booking_date": booking.booking_date,
+            "booking_date": booking.booking_date.strftime("%Y-%m-%d"),
             "booking_status": booking.booking_status,
             "payment_status": booking.payment_status,
             "trek_status": booking.trek.status,
-            "start_date": booking.trek.start_date,
-            "end_date": booking.trek.end_date
+            "start_date": booking.trek.start_date.strftime("%Y-%m-%d"),
+            "end_date": booking.trek.end_date.strftime("%Y-%m-%d")
         })
 
     return jsonify(result), 200
@@ -224,6 +243,19 @@ def update_profile():
         "message": "Profile updated successfully"
     }), 200
 
+#get update profile
+# Get Profile
+@user_bp.route("/profile", methods=["GET"])
+@trekker_required
+def get_profile():
+
+    user = get_logged_in_user()
+
+    return jsonify({
+        "name": user.name,
+        "email": user.email,
+        "phone": user.phone
+    }), 200
 
 #cancel booking
 @user_bp.route("/cancel_booking/<int:booking_id>", methods=["PUT"])
@@ -248,7 +280,7 @@ def cancel_booking(booking_id):
     if booking.booking_status == "Completed":
         return jsonify({"message": "Completed trek cannot be cancelled"}), 400
     
-    booking.booking_status == "Cancelled"
+    booking.booking_status = "Cancelled"
     booking.trek.available_slots += 1
 
     db.session.commit()
@@ -276,9 +308,61 @@ def trekking_history():
             "booking_id": booking.id,
             "trek_name": booking.trek.trek_name,
             "location": booking.trek.location,
-            "booking_date": booking.booking_date,
-            "start_date": booking.trek.start_date,
-            "end_date": booking.trek.end_date,
+            "booking_date": booking.booking_date.strftime("%Y-%m-%d"),
+            "start_date": booking.trek.start_date.strftime("%Y-%m-%d"),
+            "end_date": booking.trek.end_date.strftime("%Y-%m-%d"),
             "status": booking.booking_status
         })
     return jsonify(result), 200
+
+@user_bp.route("/export-history", methods=["POST"])
+@trekker_required
+def export_history():
+    from tasks.export_tasks import export_csv
+
+    user = get_logged_in_user()
+
+    task = export_csv.delay(user.id)
+
+    return jsonify({
+        "message": "CSV Export Started",
+        "task_id": task.id
+    }), 202
+
+#exportcsv status
+@user_bp.route("/latest-export", methods=["GET"])
+@trekker_required
+def latest_export():
+
+    user = get_logged_in_user()
+
+    if not user.latest_export:
+
+        return jsonify({
+            "status": "Not Ready"
+        }), 200
+
+    return jsonify({
+        "status": "Ready",
+        "filename": user.latest_export
+    }), 200
+
+#download exportcsv
+@user_bp.route("/download-export", methods=["GET"])
+@trekker_required
+def download_export():
+
+    user = get_logged_in_user()
+
+    if not user.latest_export:
+        return jsonify({
+            "message": "No CSV available"
+        }), 404
+
+    export_folder = os.path.join(current_app.root_path, "exports")
+
+    return send_from_directory(
+        export_folder,
+        user.latest_export,
+        as_attachment=True
+    )
