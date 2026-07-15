@@ -2,7 +2,7 @@
     <div class="container-fluid vh-100">
         <div class="row h-100">
             <div class="col-lg-7 d-none d-lg-block p-0">
-                <img src="../assets/login.jpg" class="login-image">
+                <img src="https://images.unsplash.com/photo-1517824806704-9040b037703b?auto=format&fit=crop&w=1200&q=80" class="login-image" alt="Trekking adventure illustration">
             </div>
             <div class="col-lg-5 d-flex align-items-center justify-content-center">
                 <div class="card login-card p-5">

@@ -2,7 +2,7 @@
     <div class="container-fluid vh-100">
         <div class="row h-100">
             <div class="col-lg-7 d-none d-lg-block p-0">
-                <img src="../assets/register.jpg" class="register-image">
+                <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80" class="register-image" alt="Mountain adventure scenery">
             </div>
             <div class="col-lg-5 d-flex align-items-center justify-content-center">
                 <div class="card register-card p-5">

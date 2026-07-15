@@ -35,7 +35,7 @@
                         </router-link>
                     </div>
                     <div class="col-lg-6">
-                        <img src="../assets/hero.jpg" class="img-fluid rounded-4 hero-image">
+                        <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80" class="img-fluid rounded-4 hero-image" alt="Mountain trek scenery">
                     </div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="card trek-card">
-                        <img src="../assets/trek1.jpg" class="card-img-top">
+                        <img src="https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=900&q=80" class="card-img-top" alt="Kedarkantha trek landscape">
                         <div class="card-body">
                             <h5>Kedarkantha Trek</h5>
                             <p class="text-secondary">Uttarakhand</p>
@@ -58,7 +58,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="card trek-card">
-                        <img src="../assets/trek2.jpg" class="card-img-top">
+                        <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80" class="card-img-top" alt="Hampta Pass trek landscape">
                         <div class="card-body">
                             <h5>Hampta Pass</h5>
                             <p class="text- secondary">Himachal Pradesh</p>
@@ -67,7 +67,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="card trek-card">
-                        <img src="../assets/trek3.jpg" class="card-img-top">
+                        <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80" class="card-img-top" alt="Valley of Flowers trek landscape">
                         <div class="card-body">
                             <h5>valley of flowers</h5>
                             <p class="text-secondary">Uttarakhand</p>
